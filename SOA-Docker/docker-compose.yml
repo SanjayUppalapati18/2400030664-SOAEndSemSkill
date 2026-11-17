@@ -1,0 +1,35 @@
+services:
+  app.db:
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: appdb
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  app-service:
+    build: ./app-service
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: app.db
+      DB_PORT: 3306
+      DB_NAME: appdb
+      DB_USER: root
+      DB_PASSWORD: root
+      PORT: 3000
+    depends_on:
+      app.db:
+        condition: service_healthy
+
+volumes:
+  db-data:
+    name: db-data
